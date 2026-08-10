@@ -1,6 +1,6 @@
 ---
 name: tech-design-grill
-description: Grill the user to turn an approved stage PRD into an implementable technical design grounded in the real codebase. Clarifies current and target architecture, component responsibilities, interfaces, data and state design, security boundaries, migration, code impact, testing, and requirement traceability. Requires product.md, product-stages.md, and stage-{n}-prd.md. Outputs stage-{n}-tech-design.md. Use after PRD approval and before implementation planning or coding.
+description: Grill the user to turn an approved stage PRD into an implementable technical design grounded in the real codebase when one exists, or in an explicit greenfield baseline. Clarifies current and target architecture, component responsibilities, interfaces, data and state design, security boundaries, migration, code impact, testing, and requirement traceability. Requires product.md, product-stages.md, and stage-{n}-prd.md. Outputs stage-{n}-tech-design.md. Use after PRD approval and before implementation planning or coding.
 ---
 
 # Background
@@ -10,7 +10,7 @@ Technical design translates an approved product contract into an implementable s
 A valid design must be grounded in both:
 
 1. the canonical product chain: `product.md → product-stages.md → stage-{n}-prd.md`;
-2. the actual codebase: current modules, contracts, persistence, runtime behavior, tests, and migration constraints.
+2. the actual codebase, when one exists: current modules, contracts, persistence, runtime behavior, tests, and migration constraints; otherwise an explicitly declared greenfield baseline.
 
 Do not treat an older technical document as authoritative merely because it is more detailed. If the user has declared a newer product document canonical, record conflicts with old documents as migration work.
 
@@ -21,16 +21,17 @@ Do not treat an older technical document as authoritative merely because it is m
 - `product.md` — settled product definition
 - `product-stages.md` — settled stage plan
 - `stage-{n}-prd.md` — approved product requirements for the target stage
-- the current codebase and relevant runtime/configuration files
+- the current codebase and relevant runtime/configuration files, if they exist
+- project mode: existing system or greenfield
 
-If one of the three product documents is missing or not approved, stop and return to the appropriate product skill. If the codebase is inaccessible, state that limitation rather than inventing current architecture.
+If one of the three product documents is missing or not approved, stop and return to the appropriate product skill. For an existing system, if the codebase is inaccessible, state that limitation rather than inventing current architecture. For a greenfield project, explicitly record that no current implementation exists.
 
 ## First: establish the source of truth
 
 Before asking design questions:
 
 1. Read the three canonical product documents.
-2. Inspect the actual codebase and tests.
+2. Inspect the actual codebase and tests, or explicitly establish a greenfield baseline when no implementation exists.
 3. Identify old or replaced designs that may create migration debt.
 4. Build a requirement inventory from stable PRD IDs.
 5. Separate facts from decisions:
@@ -41,7 +42,7 @@ Before asking design questions:
 
 Interview the user until shared understanding of the technical design is reached. Main branches include:
 
-- **current architecture** — what exists now and where are the relevant boundaries?
+- **current architecture** — what exists now and where are the relevant boundaries, or what is explicitly absent in greenfield mode?
 - **target architecture** — what components and responsibilities are needed?
 - **requirement mapping** — how does each PRD requirement map to components and tests?
 - **interfaces and contracts** — what calls what, with which inputs, outputs, and failures?
@@ -209,7 +210,7 @@ Then continue grilling.
 # Core Principles
 
 1. **PRD defines what; technical design defines how** — never hide product changes inside architecture.
-2. **Inspect before designing** — current code and tests are facts, not assumptions.
+2. **Inspect before designing** — current code and tests are facts, not assumptions; in greenfield mode, explicitly record their absence.
 3. **One source of truth** — derive from the canonical product chain and record legacy drift separately.
 4. **Trace every requirement** — each PRD ID maps to components and verification evidence.
 5. **Migration is part of design** — a target architecture without a safe path from current state is incomplete.
@@ -231,7 +232,7 @@ Then continue grilling.
 # Session Complete When
 
 - [ ] Canonical product inputs are confirmed
-- [ ] Current architecture is grounded in inspected code
+- [ ] Current architecture is grounded in inspected code, or greenfield mode is explicitly established
 - [ ] Every P0 PRD requirement maps to a component and verification method
 - [ ] Target component responsibilities and ownership are unambiguous
 - [ ] Interfaces, data, state, and failure behavior are specified
