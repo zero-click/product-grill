@@ -1,15 +1,15 @@
 ---
 name: prd-grill
-description: Grill the user to design a single stage's detailed PRD. Clarifies user flows, features, technical decisions, quality standards, and acceptance criteria. Requires product.md and product-stages.md as input. Outputs stage-{n}-prd.md—a specification that guides development for one stage.
+description: Grill the user to define a single stage's product requirements. Clarifies user flows, product behavior, feature scope, quality outcomes, acceptance criteria, edge cases, and risks. Requires product.md and product-stages.md as input. Outputs stage-{n}-prd.md as the approved product input to technical design. Use this for stage PRDs; do not use it to choose architecture, tech stack, modules, database schemas, or implementation tasks.
 ---
 
 # Background
 
-Stage PRD design is a **detailed execution specification**, not philosophy.
+Stage PRD design is a **detailed product specification**, not philosophy and not technical design.
 
-A stage PRD must answer: **what is the user flow**, **what features are built**, **what are the technical decisions**, **what's the quality bar**, **how do we validate**, and **what are the risks**. This specification must be clear enough for developers and QA to work autonomously.
+A stage PRD must answer: **what is the user flow**, **what product behavior is required**, **what is in scope**, **what is the quality bar**, **how the result is accepted**, and **what are the risks**. It must be precise enough for product, engineering, and QA to share one behavioral contract while leaving implementation choices to a separate technical design.
 
-A "decision tree" for stage PRD includes: **user flows**, **feature scope and priority**, **technical architecture**, **quality standards**, **validation strategy**, and **edge cases/risks**.
+A "decision tree" for stage PRD includes: **user flows**, **feature scope and priority**, **observable product behavior**, **product-level artifacts and states**, **quality outcomes**, **acceptance strategy**, and **edge cases/risks**.
 
 # Requirement
 
@@ -26,9 +26,8 @@ Interview the user until shared understanding of this stage's detailed design is
 - **target user for this stage** — who is the primary user (may be narrower than product.md)
 - **user flows** — step-by-step: how does the user accomplish key tasks in this stage?
 - **feature list and priority** — what features are built? what's MVP vs. nice-to-have?
-- **technical architecture** — how is this built? why this tech stack / design? constraints?
-- **data model** — what data structures, entities, APIs are needed?
-- **quality and non-functional requirements** — performance, reliability, security, compliance
+- **product contract** — what artifacts, user-visible states, ownership rules, and observable system behaviors must exist?
+- **quality and non-functional outcomes** — what performance, reliability, security, privacy, or compliance outcomes must users receive?
 - **acceptance criteria** — how do we know this feature is done? definition of done?
 - **edge cases and error handling** — what goes wrong? how do we handle it?
 - **dependencies and risks** — what external blockers? what could derail this?
@@ -54,7 +53,7 @@ Default to multiple-choice with recommendation. Use open freeform only when opti
 
 Finding **facts** is your job (examine product.md, review product-stages.md, research similar products). Never ask the user for facts you could research yourself. When a frontier question requires an environment fact (filesystem, tools, runtime state), dispatch a sub-agent to fetch it. Do not block the whole round: treat that branch as unsettled and continue asking other frontier questions whose prerequisites are already settled. Finding **decisions** is theirs.
 
-The session ends when the frontier is empty. Do not start development until PRD is confirmed and user is ready.
+The session ends when every material product branch is settled or explicitly marked for validation. Do not start technical design until the PRD is confirmed.
 
 # Output
 
@@ -93,48 +92,47 @@ Once shared understanding is reached, produce:
 ## III. Feature Specification
 
 ### Feature List (MVP scope for this stage)
-| Feature | User Story | Acceptance Criteria | Priority | Technical Notes |
-|---------|------------|-------------------|----------|-----------------|
-| <name> | As <user>, I want <action> so that <benefit> | <how do we verify it works?> | P0/P1/P2 | <tech decisions> |
+| ID | Feature | User Story | Acceptance Criteria | Priority | Product Rules |
+|----|---------|------------|---------------------|----------|---------------|
+| FR-01 | <name> | As <user>, I want <action> so that <benefit> | <observable evidence that it works> | P0/P1/P2 | <required behavior or invariant> |
 
 ### Features Explicitly NOT in This Stage
 <what's deferred? why?>
 
-## IV. Technical Design
+## IV. Product Contract
 
-### Architecture / Tech Stack
-<how is this built? key tech decisions and why>
+### Core Artifacts and Ownership
+<what product objects or artifacts exist, who creates/reads/updates them, and which one is the source of truth?>
 
-### Data Model
-<core entities, relationships, APIs needed>
+### User-Visible States and Transitions
+<what states can users observe, what events move between them, and what outcomes are terminal or blocked?>
 
-### System Interfaces
-<how does this stage connect to external systems or other stages?>
+### External Behavior and Constraints
+<what must callers or users be able to do or observe? Define product behavior, not API paths, database tables, modules, or framework choices.>
 
-### Constraints and Non-Functional Requirements
-- Performance: <e.g., response time < 500ms>
-- Reliability: <uptime, error handling>
-- Security: <auth, data privacy, compliance>
-- Scalability: <concurrent users, data volume>
+### Non-Functional Outcomes
+- Performance: <user-visible threshold and measurement condition>
+- Reliability: <required recovery or availability outcome>
+- Security and privacy: <required product boundary and prohibited outcome>
+- Scale: <expected usage envelope only when material to acceptance>
 
 ## V. Quality and Acceptance
 
 ### Definition of Done
-<what must be true for a feature to be considered complete?>
-- Code review passed
-- Tests pass (unit / integration / E2E)
-- Documentation updated
-- Performance benchmarks met
-- etc.
+<what product evidence must exist for this stage to be accepted?>
+- Every P0 requirement has observable acceptance evidence
+- Required normal, blocked, and boundary scenarios pass
+- Non-functional outcomes are measured where specified
+- No unresolved product decision blocks technical design
 
 ### Acceptance Criteria (per feature)
 <from feature table above; reference it>
 
-### Testing Strategy
-- Unit test coverage: <target %?>
-- Integration tests: <what scenarios?>
-- E2E tests: <user journeys to test?>
-- Manual testing: <what requires manual QA?>
+### Acceptance Strategy
+- Automated acceptance scenarios: <which externally observable behaviors?>
+- End-to-end journeys: <which user flows?>
+- Human evaluation: <what requires judgment and by whom?>
+- Evidence: <what report, result, or artifact proves acceptance?>
 
 ### Edge Cases and Error Handling
 <what goes wrong? how should system respond?>
@@ -152,12 +150,12 @@ Once shared understanding is reached, produce:
 <what must exist or be true outside this stage?>
 
 ### Open Questions
-<what still needs deciding before dev starts?>
+<what still needs deciding before PRD approval or technical design?>
 
-## VII. Rollout and Validation
+## VII. Stage Validation
 
-### Rollout Strategy
-<how do we deploy this? canary, full, phased?>
+### Validation Plan
+<how will this stage be validated with target users or representative scenarios? Define exposure and evidence needs as product constraints; leave deployment mechanisms to technical design.>
 
 ### Validation Checklist
 <how do we confirm success at launch?>
@@ -181,7 +179,7 @@ If shared understanding NOT reached:
 
 **Unresolved Branch**: <which PRD decision is still open?>
 
-**Why It Matters**: <why is this blocking development?>
+**Why It Matters**: <why is this blocking PRD approval or technical design?>
 
 **Next Step**: <what needs to be clarified or decided?>
 ```
@@ -190,10 +188,10 @@ Then continue grilling.
 
 # Core Principles
 
-1. **PRD is a specification, not a suggestion** — developers should not have to guess
+1. **PRD is a product specification, not a suggestion** — engineering should not have to guess required behavior
 2. **User flows are the spine** — everything else hangs off how users actually use it
 3. **Acceptance criteria are testable** — if you can't test it, it's not done
-4. **Trade-offs are explicit** — why this feature and not that one? why this tech and not that?
+4. **Product trade-offs are explicit** — why this behavior and not the alternative? what is deferred?
 5. **Risks are named** — what could go wrong? what's the mitigation?
 6. **One question at a time, with options** — clarity over speed
 
@@ -202,10 +200,10 @@ Then continue grilling.
 1. Features listed without user flows → "Who uses this? What's the actual task?"
 2. "Nice to have" unclear → "Which features are P0 MVP vs. P2 future?"
 3. Acceptance criteria too vague → "How do you test 'fast'? Be specific."
-4. Technical decisions without reasoning → "Why this database? What were the alternatives?"
+4. Implementation choices embedded in PRD → move architecture, database, modules, and API implementation into technical design
 5. No edge cases → "What if the user does X? Does the system handle it?"
 6. Dependencies ignored → "What external blockers exist?"
-7. No rollout plan → "How do we deploy this safely?"
+7. No stage validation plan → "What evidence will show the stage succeeded with its target user?"
 
 # Session Complete When
 
@@ -214,14 +212,13 @@ Then continue grilling.
 - [ ] Core user flows are step-by-step documented
 - [ ] Feature list is prioritized and scoped
 - [ ] Deferred features are explicitly listed
-- [ ] Technical architecture is decided
-- [ ] Data model is clear
+- [ ] Core product artifacts, ownership, and user-visible states are clear
 - [ ] Non-functional requirements are specified
 - [ ] Definition of done is explicit
 - [ ] Acceptance criteria per feature are testable
 - [ ] Edge cases and error handling are documented
 - [ ] Major risks are identified
 - [ ] External dependencies are mapped
-- [ ] Rollout and validation plan is ready
-- [ ] User confirms: "Devs can start building now."
+- [ ] Stage validation plan is ready
+- [ ] User confirms: "The product requirements are approved. We can start technical design."
 - [ ] No major ambiguity remains
