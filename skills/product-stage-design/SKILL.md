@@ -1,6 +1,6 @@
 ---
 name: product-stage-design
-description: Grill the user to plan and prioritize product stages. Clarifies why stages are divided this way, what each stage validates, stage dependencies, and risks. Requires product.md as input. Outputs product-stages.md—a roadmap that guides stage-by-stage PRD writing.
+description: Plan and prioritize product stages from product.md. Supports interactive grilling one question at a time and headless draft generation when the user wants a complete product-stages.md produced first for later review. Clarifies why stages are divided this way, what each stage validates, stage dependencies, and risks.
 ---
 
 # Background
@@ -22,7 +22,7 @@ When product uncertainty is still high, prefer **1+N planning**:
 
 - `product.md` (settled product definition)
 
-If input is missing, stop grilling and ask the user to provide/confirm the input first.
+If input is missing, use Interactive Mode to ask the user to provide or confirm it. In Headless Mode, use any available context, mark the missing input as `BLOCKED` in `Human Review Required`, and produce only the portions that can be defended from evidence.
 
 Interview the user until shared understanding of Stage Planning is reached. Assume product.md is already settled. Map as **decision tree**: main branches include:
 
@@ -37,7 +37,11 @@ Interview the user until shared understanding of Stage Planning is reached. Assu
 - **stage success criteria** — how do we know each stage succeeded? (gates to next stage)
 - **open questions** — what still needs deciding?
 
-Work **one question at a time**. The **frontier** is every decision whose prerequisites are settled. Identify the next frontier question, ask it with recommended answer, and wait for user confirmation before moving on.
+## Operating Modes
+
+Use **Interactive Mode** unless the user asks for headless, batch, autonomous, draft-first, "no questions", or "just produce the doc".
+
+In **Interactive Mode**, work one question at a time. The **frontier** is every decision whose prerequisites are settled. Identify the next frontier question, ask it with recommended answer, and wait for user confirmation before moving on.
 
 Each question should be formatted:
 
@@ -55,9 +59,18 @@ Choices:
 After user answers, briefly reflect what was locked and what it unlocks next. Do not batch multiple frontier questions in one turn.
 Default to multiple-choice with recommendation. Use open freeform only when options cannot be meaningfully pre-defined.
 
+In **Headless Mode**, do not stop to ask frontier questions. Read `product.md`, inspect any relevant repository context, choose the most defensible stage strategy, and produce a complete `product-stages.md` draft in one pass. When a decision truly needs human confirmation, write it into the output under `Human Review Required` with:
+
+- the decision that needs confirmation;
+- the recommended answer;
+- 2-4 alternatives and trade-offs;
+- the downstream impact if the recommendation is wrong.
+
+Mark uncertain assumptions inline as `Assumption` or `Needs Review`. Headless output is a reviewable draft, not final approval.
+
 Finding **facts** is your job (research competitors' roadmaps, check dependencies, examine product.md). Never ask the user for facts you could research yourself. When a frontier question requires an environment fact (filesystem, tools, runtime state), dispatch a sub-agent to fetch it. Do not block the whole round: treat that branch as unsettled and continue asking other frontier questions whose prerequisites are already settled. Finding **decisions** is theirs.
 
-The session ends when the frontier is empty. Do not write stage-level PRDs (prd-grill) until stages are planned and user confirms.
+In Interactive Mode, the session ends when the frontier is empty. Do not write stage-level PRDs (prd-grill) until stages are planned and user confirms. In Headless Mode, produce the best complete draft and leave approval to human review.
 
 # Output
 
@@ -110,6 +123,12 @@ If placeholder:
 
 ### Open Questions
 <what still needs deciding before stage PRDs?>
+
+## V. Human Review Required
+
+| Decision | Recommendation | Alternatives | Impact If Wrong |
+|----------|----------------|--------------|-----------------|
+| <decision needing human confirmation> | <recommended answer> | <2-4 options> | <what changes downstream?> |
 ```
 
 If shared understanding NOT reached:
@@ -124,7 +143,7 @@ If shared understanding NOT reached:
 **Next Step**: <what needs to be clarified?>
 ```
 
-Then continue grilling.
+In Interactive Mode, then continue grilling. In Headless Mode, include this unresolved branch in `Human Review Required` and still produce the best defensible draft.
 
 # Core Principles
 
@@ -153,5 +172,5 @@ Then continue grilling.
 - [ ] Dependencies between stages are explicit
 - [ ] Success criteria for each stage are measurable
 - [ ] Major risks per stage are surfaced
-- [ ] User confirms: "This roadmap makes sense. I'm ready for stage PRDs."
+- [ ] Interactive Mode: user confirms "This roadmap makes sense. I'm ready for stage PRDs." / Headless Mode: confirmation is listed in `Human Review Required`
 - [ ] No major uncertainties in the plan remain

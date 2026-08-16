@@ -1,6 +1,6 @@
 ---
 name: tech-design-grill
-description: Grill an approved stage PRD into an implementable technical design. Use after PRD approval and before implementation planning or coding. Requires product.md, product-stages.md, and stage-{n}-prd.md; inspect the existing codebase when present or establish greenfield mode. Outputs stage-{n}-tech-design.md with architecture, contracts, state, security, migration, code impact, testing, and requirement traceability.
+description: Convert an approved stage PRD into an implementable technical design. Supports interactive grilling one question at a time and headless draft generation when the user wants a complete stage-{n}-tech-design.md produced first for later review. Use after PRD approval and before implementation planning or coding. Inspect the existing codebase when present or establish greenfield mode.
 ---
 
 # Background
@@ -47,7 +47,11 @@ Then resolve this decision tree:
 - code additions, changes, and deletions
 - testing and completion evidence
 
-Ask **one unresolved user decision at a time**. Give 2-4 meaningful options, their main trade-offs, and one grounded recommendation. Investigate codebase and environment facts yourself; do not ask the user for facts you can inspect.
+## Operating Modes
+
+Use **Interactive Mode** unless the user asks for headless, batch, autonomous, draft-first, "no questions", or "just produce the doc".
+
+In **Interactive Mode**, ask one unresolved user decision at a time. Give 2-4 meaningful options, their main trade-offs, and one grounded recommendation. Investigate codebase and environment facts yourself; do not ask the user for facts you can inspect.
 
 Use:
 
@@ -63,6 +67,15 @@ Choices:
 ```
 
 After each answer, state what is locked and continue to the next unblocked decision.
+
+In **Headless Mode**, do not stop to ask design questions. Read the approved product inputs, inspect the codebase or record greenfield assumptions, choose the most defensible technical design, and produce a complete `stage-{n}-tech-design.md` draft in one pass. When a decision truly needs human confirmation, write it into the output under `Human Review Required` with:
+
+- the decision that needs confirmation;
+- the recommended answer;
+- 2-4 alternatives and trade-offs;
+- the downstream impact if the recommendation is wrong.
+
+Mark uncertain assumptions inline as `Assumption` or `Needs Review`. Headless output is a reviewable draft, not final approval.
 
 ## Protect the product boundary
 
@@ -140,7 +153,12 @@ Produce:
 | Risk / Decision | Impact | Mitigation / Owner | Blocking? |
 |-----------------|--------|--------------------|-----------|
 
-## 10. Review
+## 10. Human Review Required
+| Decision | Recommendation | Alternatives | Impact If Wrong |
+|----------|----------------|--------------|-----------------|
+| <decision needing human confirmation> | <recommended answer> | <2-4 options> | <what changes downstream?> |
+
+## 11. Review
 - **Requirement Coverage**: Complete / Incomplete
 - **Architecture Coherence**: Pass / Request Changes
 - **Migration Safety**: Pass / Request Changes / Not Applicable
@@ -158,4 +176,5 @@ Finish only when:
 - migration and rollback are defined or marked not applicable for greenfield;
 - code impact and testing cover normal, blocked, boundary, and migration cases;
 - no technical decision changes the approved product contract;
-- the user approves the design for implementation planning.
+- Interactive Mode: the user approves the design for implementation planning;
+- Headless Mode: approval and any unresolved design decisions are listed in `Human Review Required`.

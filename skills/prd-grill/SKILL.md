@@ -1,6 +1,6 @@
 ---
 name: prd-grill
-description: Grill the user to define a single stage's product requirements. Clarifies user flows, product behavior, feature scope, quality outcomes, acceptance criteria, edge cases, and risks. Requires product.md and product-stages.md as input. Outputs stage-{n}-prd.md as the approved product input to technical design. Use this for stage PRDs; do not use it to choose architecture, tech stack, modules, database schemas, or implementation tasks.
+description: Define a single stage's product requirements. Supports interactive grilling one question at a time and headless draft generation when the user wants a complete stage-{n}-prd.md produced first for later review. Clarifies user flows, product behavior, feature scope, quality outcomes, acceptance criteria, edge cases, and risks. Use this for stage PRDs; do not use it to choose architecture, tech stack, modules, database schemas, or implementation tasks.
 ---
 
 # Background
@@ -18,7 +18,7 @@ A "decision tree" for stage PRD includes: **user flows**, **feature scope and pr
 - `product.md` (settled product definition)
 - `product-stages.md` (settled stage plan, including target stage)
 
-If input is missing, stop grilling and ask the user to provide/confirm the input first.
+If input is missing, use Interactive Mode to ask the user to provide or confirm it. In Headless Mode, use any available context, mark the missing input as `BLOCKED` in `Human Review Required`, and produce only the portions that can be defended from evidence.
 
 Interview the user until shared understanding of this stage's detailed design is reached. Assume product.md and product-stages.md are settled. Map as **decision tree**: main branches include:
 
@@ -33,7 +33,11 @@ Interview the user until shared understanding of this stage's detailed design is
 - **dependencies and risks** — what external blockers? what could derail this?
 - **open questions** — what still needs deciding before dev?
 
-Work **one question at a time**. The **frontier** is every decision whose prerequisites are settled. Identify the next frontier question, ask it with recommended answer, and wait for user confirmation before moving on.
+## Operating Modes
+
+Use **Interactive Mode** unless the user asks for headless, batch, autonomous, draft-first, "no questions", or "just produce the doc".
+
+In **Interactive Mode**, work one question at a time. The **frontier** is every decision whose prerequisites are settled. Identify the next frontier question, ask it with recommended answer, and wait for user confirmation before moving on.
 
 Each question should be formatted:
 
@@ -51,9 +55,18 @@ Choices:
 After user answers, briefly reflect what was locked and what it unlocks next. Do not batch multiple frontier questions in one turn.
 Default to multiple-choice with recommendation. Use open freeform only when options cannot be meaningfully pre-defined.
 
+In **Headless Mode**, do not stop to ask frontier questions. Read the settled product and stage plan, inspect any relevant repository context, choose the most defensible defaults, and produce a complete `stage-{n}-prd.md` draft in one pass. When a decision truly needs human confirmation, write it into the output under `Human Review Required` with:
+
+- the decision that needs confirmation;
+- the recommended answer;
+- 2-4 alternatives and trade-offs;
+- the downstream impact if the recommendation is wrong.
+
+Mark uncertain assumptions inline as `Assumption` or `Needs Review`. Headless output is a reviewable draft, not final approval.
+
 Finding **facts** is your job (examine product.md, review product-stages.md, research similar products). Never ask the user for facts you could research yourself. When a frontier question requires an environment fact (filesystem, tools, runtime state), dispatch a sub-agent to fetch it. Do not block the whole round: treat that branch as unsettled and continue asking other frontier questions whose prerequisites are already settled. Finding **decisions** is theirs.
 
-The session ends when every material product branch is settled or explicitly marked for validation. Do not start technical design until the PRD is confirmed.
+In Interactive Mode, the session ends when every material product branch is settled or explicitly marked for validation. Do not start technical design until the PRD is confirmed. In Headless Mode, produce the best complete draft and leave approval to human review.
 
 # Output
 
@@ -152,7 +165,13 @@ Once shared understanding is reached, produce:
 ### Open Questions
 <what still needs deciding before PRD approval or technical design?>
 
-## VII. Stage Validation
+## VII. Human Review Required
+
+| Decision | Recommendation | Alternatives | Impact If Wrong |
+|----------|----------------|--------------|-----------------|
+| <decision needing human confirmation> | <recommended answer> | <2-4 options> | <what changes downstream?> |
+
+## VIII. Stage Validation
 
 ### Validation Plan
 <how will this stage be validated with target users or representative scenarios? Define exposure and evidence needs as product constraints; leave deployment mechanisms to technical design.>
@@ -184,7 +203,7 @@ If shared understanding NOT reached:
 **Next Step**: <what needs to be clarified or decided?>
 ```
 
-Then continue grilling.
+In Interactive Mode, then continue grilling. In Headless Mode, include this unresolved branch in `Human Review Required` and still produce the best defensible draft.
 
 # Core Principles
 
@@ -220,5 +239,5 @@ Then continue grilling.
 - [ ] Major risks are identified
 - [ ] External dependencies are mapped
 - [ ] Stage validation plan is ready
-- [ ] User confirms: "The product requirements are approved. We can start technical design."
+- [ ] Interactive Mode: user confirms "The product requirements are approved. We can start technical design." / Headless Mode: approval is listed in `Human Review Required`
 - [ ] No major ambiguity remains

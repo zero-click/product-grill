@@ -1,6 +1,6 @@
 ---
 name: product-grill
-description: Grill the user until a vague product idea becomes a clear, documented Product Definition. Clarifies target user, core problem, product model, core assumptions, long-term vision, and boundaries. Outputs product.md—the high-level product specification that guides stage design and team execution.
+description: Convert a vague product idea into a clear, documented Product Definition. Supports interactive grilling one question at a time and headless draft generation when the user wants a complete product.md produced first for later review. Clarifies target user, core problem, product model, core assumptions, long-term vision, and boundaries.
 ---
 
 # Background
@@ -26,7 +26,11 @@ Interview the user until shared understanding of the Product Definition is reach
 - **key dependencies** — what must exist or be true?
 - **open questions** — what's still uncertain?
 
-Work **one question at a time**. The **frontier** is every decision whose prerequisites are settled—questions you can ask NOW. Identify the next frontier question, ask it with your recommended answer, wait for user confirmation before moving to the next question.
+## Operating Modes
+
+Use **Interactive Mode** unless the user asks for headless, batch, autonomous, draft-first, "no questions", or "just produce the doc".
+
+In **Interactive Mode**, work one question at a time. The **frontier** is every decision whose prerequisites are settled—questions you can ask NOW. Identify the next frontier question, ask it with your recommended answer, wait for user confirmation before moving to the next question.
 
 Each question should be formatted:
 
@@ -44,11 +48,20 @@ Choices:
 After user answers, reflect briefly on what it unlocks, then ask the next question. Do not batch multiple frontier questions into one turn.
 Default to multiple-choice with recommendation. Use open freeform only when options cannot be meaningfully pre-defined.
 
+In **Headless Mode**, do not stop to ask frontier questions. Research facts yourself, make the best defensible assumptions, select recommended defaults, and produce a complete `product.md` draft in one pass. When a decision truly needs human confirmation, write it into the output under `Human Review Required` with:
+
+- the decision that needs confirmation;
+- the recommended answer;
+- 2-4 alternatives and trade-offs;
+- the downstream impact if the recommendation is wrong.
+
+Mark uncertain assumptions inline as `Assumption` or `Needs Review`. Headless output is a reviewable draft, not final approval.
+
 Finding **facts** is your job (research examples, examine context, look up precedents). Never ask the user for facts you could research yourself. When a frontier question requires an environment fact (filesystem, tools, runtime state), dispatch a sub-agent to fetch it. Do not block the whole round: treat that branch as unsettled and continue asking other frontier questions whose prerequisites are already settled. Finding **decisions** is theirs.
 
 If the product bundles multiple distinct products or contradicts itself, say so directly and propose splitting.
 
-The session ends when the frontier is empty: every material branch visited, nothing important left implicit. Do not move to product-stage-design until the user confirms shared understanding.
+In Interactive Mode, the session ends when the frontier is empty: every material branch visited, nothing important left implicit. Do not move to product-stage-design until the user confirms shared understanding. In Headless Mode, produce the best complete draft and leave approval to human review.
 
 # Output
 
@@ -111,7 +124,13 @@ Once shared understanding is reached, produce:
 ### Open Questions
 <what do we still need to decide or validate?>
 
-## V. Readiness Assessment
+## V. Human Review Required
+
+| Decision | Recommendation | Alternatives | Impact If Wrong |
+|----------|----------------|--------------|-----------------|
+| <decision needing human confirmation> | <recommended answer> | <2-4 options> | <what changes downstream?> |
+
+## VI. Readiness Assessment
 
 - **Clarity**: Strong / Medium / Weak
 - **Major Uncertainties**: <what's still unclear and needs stage design to validate?>
@@ -130,7 +149,7 @@ If shared understanding has NOT been reached, output:
 **Next Step**: <what needs to be clarified?>
 ```
 
-Then continue grilling.
+In Interactive Mode, then continue grilling. In Headless Mode, include this unresolved branch in `Human Review Required` and still produce the best defensible draft.
 
 # Core Principles
 
@@ -166,5 +185,5 @@ Then continue grilling.
 - [ ] Key dependencies are identified
 - [ ] Major risks are surfaced
 - [ ] North star metric is defined
-- [ ] User confirms: "This is our product. I'm ready to plan stages."
+- [ ] Interactive Mode: user confirms "This is our product. I'm ready to plan stages." / Headless Mode: approval is listed in `Human Review Required`
 - [ ] No major ambiguity remains
