@@ -1,0 +1,60 @@
+{
+  "skill_name": "agent-skill-coach",
+  "evals": [
+    {
+      "id": 1,
+      "name": "qa-pass-overturned-by-reproducible-defect",
+      "prompt": "QA 使用 stage-acceptance-test-design 对候选版本 A 给出 PASS。独立 Reviewer 在同一版本构造了可复现的授权旁路，Product Owner 确认该行为违反已批准合同。请判断 Coach 是否改 Skill、改哪个 Skill，并给出最小候选 invariant。",
+      "expected_output": "SKILL_PATCH targeting stage-acceptance-test-design; strengthen causal/adversarial Oracle without encoding the incident.",
+      "assertions": [
+        "verdict is SKILL_PATCH",
+        "target is stage-acceptance-test-design",
+        "does not target production code or code-review-grill",
+        "requires failure replay and a holdout"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "reviewer-expands-unsettled-threat-model",
+      "prompt": "Reviewer 复现了 symlink 行为并判为安全漏洞，但批准的 threat model 把能修改该本地根目录的进程视为受信主体；Product Owner 尚未决定是否改变信任边界。请判断 Coach 的处理。",
+      "expected_output": "NO_SKILL_CHANGE with PRODUCT_DECISION attribution, or BLOCKED when required evidence is unavailable; no Skill patch until the authority decision is settled.",
+      "assertions": [
+        "does not patch a Base Skill",
+        "classifies the behavior separately from contract authority",
+        "stops for Human decision"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "plain-mention-does-not-dispatch",
+      "prompt": "Project Lead 在 Issue 留言 Ready for @Tywin，metadata 写 waiting_on=developer，但没有 mention URI，也没有 Tywin run。请判断 Coach 应改哪个层。",
+      "expected_output": "WORKFLOW_FIX targeting routing/dispatch contract; not a developer Base Skill patch.",
+      "assertions": [
+        "classification is WORKFLOW_FIX",
+        "does not target design-driven-python-development",
+        "requires verification of a real queued/running task"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "one-time-provider-outage",
+      "prompt": "一个 Agent 因一次性 provider 503 延迟，重试后完成；角色方法、Gate 和最终产物都正确。请判断 Coach 是否生成 Skill patch。",
+      "expected_output": "NO_SKILL_CHANGE; retain as operational incident only.",
+      "assertions": [
+        "verdict is NO_SKILL_CHANGE",
+        "does not create a retry rule in a professional Base Skill"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "review-driven-head-change-invalidates-qa",
+      "prompt": "QA 对 HEAD A PASS；Reviewer 要求修复；Developer 推送 HEAD B；Reviewer 对 B APPROVED，但 QA 未重跑。多个 Issue 都出现过 Lead 沿用旧 QA PASS 推进 Human Gate。请判断 Coach 的归因和候选改进。",
+      "expected_output": "WORKFLOW_FIX or product-contract-gate improvement for revision-bound gate evidence; not a QA professional-method patch.",
+      "assertions": [
+        "does not blame stage-acceptance-test-design without evidence of QA error",
+        "requires exact-revision gate evidence",
+        "requires QA rerun on B"
+      ]
+    }
+  ]
+}

@@ -23,6 +23,8 @@ approved requirements
 
 The acceptance contract is derived from approved requirements. It cannot add behavior, relax requirements, or become a competing source of truth.
 
+For AI-generated implementation, the acceptance contract also acts as an executable objective function. A clear prose requirement is not protected unless the suite can distinguish the required behavior from plausible shortcuts, fabricated evidence, and superficially green completion.
+
 ## Requirement
 
 Design and, when the repository is available, create the acceptance-test contract and runnable acceptance tests for one implementation stage.
@@ -76,7 +78,8 @@ Keep acceptance ownership independent from implementation:
 | Acceptance Owner | Test contract, executable acceptance tests, fixtures, independent execution, acceptance verdict | Modify production code to make tests pass; approve their own interpretation of unclear requirements |
 | Approver | Requirement meaning, coverage approval, accepted-test changes | Delegate acceptance meaning to the implementer |
 | Implementer | Production code and developer-owned unit/integration tests | Weaken, delete, skip, special-case, or silently modify approved acceptance tests |
-| Reviewer | Implementation quality and checks for test bypass or tampering | Treat acceptance pass as a substitute for code review |
+| Test Contract Reviewer | Independent coverage, claim-to-implementation alignment, whole-contract consistency, and material probes | Rewrite the acceptance contract or treat the author's claims as proof |
+| Code Reviewer | Implementation quality and checks for test bypass or tampering | Treat acceptance pass as a substitute for code review |
 
 The implementer may read and run acceptance tests. If a test is wrong or impossible, they submit a test change request. The acceptance owner evaluates it, and the approver accepts or rejects any substantive change before the approved suite changes.
 
@@ -112,6 +115,13 @@ The public entrypoint produces the required artifact from valid input, and missi
 
 A test may assert an exact value only when the approved requirement requires that value. Do not hard-code a class, module, database table, prompt, internal step order, or agent count merely because the current design uses it.
 
+For every mandatory property, define both:
+
+- a **positive oracle** that proves the required observable outcome; and
+- a **falsification oracle** that proves the suite rejects absence, substitution, mutation, bypass, or fabrication of the claimed capability.
+
+Be precise about observable truth and permissive about implementation. The falsification oracle may perturb a component or boundary named by the approved design when that perturbation is necessary to prove causal contribution; it must not require one arbitrary internal implementation.
+
 ### 3. Build requirement traceability
 
 Every in-scope requirement must map through this chain:
@@ -133,6 +143,25 @@ Use explicit statuses for uncovered requirements:
 - `NOT_APPLICABLE` - approved rationale is present.
 
 Never silently omit a requirement.
+
+Also maintain a machine-readable or consistently structured **QA Claim Ledger** for reviewer handoff. Each material claim states what the acceptance owner believes the contract proves and where that proof is implemented:
+
+```yaml
+claim_id: TC-...
+approved_source:
+  - <requirement/design/ADR locator>
+intended_purpose: <what the test is meant to prove>
+implementation:
+  test_ids: [AT-...]
+  test_files: [path/to/test]
+  production_boundary: <public entrypoint or named boundary>
+expected_positive: <observable result that must pass>
+expected_negative: <wrong behavior that must fail>
+command: <exact non-interactive command>
+evidence: <artifact or machine-result location>
+```
+
+The ledger is an author claim and navigation aid. It cannot prove coverage, test behavior, or approval by itself.
 
 ### 4. Design the minimum sufficient scenario set
 
@@ -169,6 +198,14 @@ List concrete negative controls. At minimum, consider:
 - skipped, deselected, quarantined, or expected-failure tests counted as pass;
 - top-level success while required work is pending or failed;
 - code paths that detect acceptance fixtures and special-case them.
+
+When a requirement claims that a capability or component contributes to an outcome, also consider:
+
+- **deletion/disable control** - remove or disable the claimed capability and require honest failure or blocking;
+- **mutation control** - alter the capability or its output and require the final outcome to fail validation or change correspondingly;
+- **bypass control** - prevent the intended capability path while leaving a convenient host/framework shortcut available, and require the shortcut not to satisfy acceptance;
+- **provenance recomputation** - independently recalculate hashes, derived values, invocation relationships, or artifact lineage instead of trusting reported evidence fields;
+- **fresh holdout/metamorphic control** - vary material inputs or constraints using a case that is not encoded as a production template, fixed expected-value table, or developer-visible special case.
 
 A negative control is valid only if the acceptance suite rejects it for the intended reason.
 
@@ -215,11 +252,17 @@ Before approval and before production implementation:
 
 At least the critical negative controls must produce the expected failures. A suite that only demonstrates green results has not established that its assertions discriminate correct from fake behavior.
 
+If any materially wrong implementation or controlled mutant still passes, treat the acceptance contract itself as defective. Correct and reapprove the oracle before using it to judge the implementation; do not preserve a green verdict and merely add a future test.
+
 Do not require all tests to be red when the repository already contains valid behavior. In that case, mutation or negative-control evidence supplies the discrimination proof.
 
-### 8. Approval gate
+### 8. Independent review and approval gate
 
-The approver reviews the contract and executable-test mapping before implementation begins. Approval requires:
+Before stakeholder approval, an independent Test Contract Reviewer reviews the exact candidate revision without rewriting it. The reviewer derives approved obligations independently, checks Design-to-Claim coverage, traces every material Claim through executable tests and actual production boundaries, checks whole-contract consistency, and uses narrow reviewer probes where trust, permission, provenance, fabricated completion, or high-impact bypass claims need corroboration.
+
+The reviewer returns `APPROVED`, `REQUEST_CHANGES`, or `BLOCKED`. Reviewer `APPROVED` means only that the exact Test Contract revision may enter the stakeholder/human approval gate.
+
+The approver then reviews the contract, reviewer evidence, and executable-test mapping before implementation begins. Approval requires:
 
 - every in-scope requirement is covered or explicitly dispositioned;
 - tests assert approved behavior rather than convenient implementation choices;
@@ -254,7 +297,10 @@ The independent run must:
 4. check collection counts and confirm no mandatory test was skipped, deselected, quarantined, or converted to expected failure;
 5. inspect required final artifacts/evidence;
 6. confirm provenance belongs to this run and prohibited side effects did not occur;
-7. issue exactly one verdict:
+7. execute the approved causal deletion/mutation/bypass controls where causal contribution is material;
+8. execute at least one fresh holdout or metamorphic case when hard-coding, fixture echoing, or template overfitting is a material risk;
+9. invalidate the suite and route it for correction if a known-false implementation can still pass;
+10. issue exactly one verdict:
    - `PASS` - all mandatory properties and artifacts are verified;
    - `REQUEST_CHANGES` - implementation behavior violates an approved requirement;
    - `BLOCKED` - an external dependency or approved test seam prevents a valid verdict.
@@ -311,26 +357,49 @@ Write an acceptance-test contract with this structure, adapting file names to th
 | Test ID | Test File / Case | Command | Mandatory | Requirement IDs |
 |---|---|---|---|---|
 
-## 7. Runtime Evidence and Artifact Inspection
+## 7. QA Claim Ledger
+```yaml
+- claim_id: TC-...
+  approved_source: [...]
+  intended_purpose: ...
+  implementation:
+    test_ids: [...]
+    test_files: [...]
+    production_boundary: ...
+  expected_positive: ...
+  expected_negative: ...
+  command: ...
+  evidence: ...
+```
+
+## 8. Runtime Evidence and Artifact Inspection
 - Evidence locations: ...
 - Fresh-run provenance method: ...
 - Artifact inspection rules: ...
 - Prohibited-side-effect observation: ...
 
-## 8. Approval
+## 9. Independent Test Contract Review
+- Reviewed Candidate Revision: ...
+- Design-to-QA Coverage Matrix: ...
+- QA-Claim-to-Implementation Matrix: ...
+- Whole-Contract Findings: ...
+- Reviewer Probe Evidence: ...
+- Reviewer Verdict: APPROVED | REQUEST_CHANGES | BLOCKED
+
+## 10. Human Approval
 - Coverage: Complete | Incomplete
 - Requirement fidelity: Pass | Request Changes
 - Anti-cheating discrimination: Pass | Request Changes
 - Executability: Pass | Blocked
 - Decision: Approved | Request Changes | Blocked
-- Reviewer / Date / Contract Hash: ...
+- Approver / Date / Contract Hash: ...
 
-## 9. Human Review Required
+## 11. Human Review Required
 | Decision | Recommendation | Alternatives | Impact If Wrong | Can Execute Before Confirmation? |
 |---|---|---|---|---|
 | <decision needing human confirmation> | <recommended answer> | <2-4 options> | <what changes downstream?> | Yes / No |
 
-## 10. Test Change Requests
+## 12. Test Change Requests
 | TCR ID | Reason | Requirement Impact | Acceptance Owner Decision | Approver Decision | New Hash |
 |---|---|---|---|---|---|
 ```
@@ -344,12 +413,16 @@ This skill is complete only when:
 - the test contract and executable acceptance tests both exist, or a specific blocker explains why they cannot;
 - every in-scope requirement is covered or explicitly dispositioned;
 - each mandatory test maps to a requirement and exact command;
+- the QA Claim Ledger maps every material claim to approved authority, executable tests, production boundary, positive/negative behavior, command, and evidence;
 - critical negative controls are proven to fail against controlled bad behavior;
 - test collection and skip/deselection policies are enforced;
-- Interactive Mode: the approver has approved the contract revision/hash;
-- Headless Mode: approval is listed in `Human Review Required`;
+- the exact candidate revision and all review inputs are ready for independent Test Contract Review;
+- Interactive Mode: unresolved requirement or risk decisions are either settled by the approver or listed in `Human Review Required`;
+- Headless Mode: all decisions requiring confirmation are listed in `Human Review Required`;
 - ownership and test change request rules are recorded;
 - the suite can be rerun independently from a clean workspace.
+
+At this point the acceptance owner may declare `READY_FOR_TEST_CONTRACT_REVIEW`, not stakeholder approval. The stage becomes acceptance-ready only after the independent reviewer approves the exact revision and the stakeholder/human gate records approval.
 
 If any condition is missing, report `BLOCKED` with the exact missing decision, seam, dependency, or artifact. Do not label the stage acceptance-ready.
 
@@ -365,3 +438,5 @@ If any condition is missing, report `BLOCKED` with the exact missing decision, s
 8. Stale artifact acceptance - isolate runs and verify artifact timestamps/run IDs/content provenance.
 9. Live dependency confusion - distinguish `BLOCKED` external dependency from `REQUEST_CHANGES` implementation failure.
 10. Acceptance pass replacing code review - approved behavior and implementation quality remain separate gates.
+11. Evidence-shape acceptance - a file, status, invocation record, or signed claim is not proof unless its content and causal provenance are independently checked.
+12. Retrofitting after a false PASS - when a cheating implementation passes, reopen and correct the acceptance contract first; do not keep the old PASS while treating the missing oracle as optional future coverage.

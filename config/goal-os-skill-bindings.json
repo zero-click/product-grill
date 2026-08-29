@@ -1,0 +1,48 @@
+{
+  "canonical_repository": "~/code/product-grill",
+  "project": "Goal OS",
+  "bindings": {
+    "Goal OS - Project Lead": [
+      "product-grill",
+      "product-stage-design",
+      "product-contract-gate",
+      "goal-os-project-routing-protocol",
+      "goal-os-spec-driven-flow"
+    ],
+    "Goal OS - PRD Writer": [
+      "prd-grill",
+      "product-contract-gate"
+    ],
+    "Goal OS - Product Reviewer": [
+      "product-contract-gate"
+    ],
+    "Varys - Arch": [
+      "tech-design-grill"
+    ],
+    "Samwell - QA": [
+      "stage-acceptance-test-design"
+    ],
+    "Tywin - Dev": [
+      "design-driven-python-development"
+    ],
+    "Brienne - CR": [
+      "test-contract-adversarial-review",
+      "code-review-grill"
+    ],
+    "Hand - PM": [
+      "goal-os-codex-command-surface",
+      "goal-os-project-routing-protocol",
+      "goal-os-spec-driven-flow"
+    ],
+    "Goal OS - Product Researcher": [
+      "goal-os-codex-command-surface",
+      "goal-os-spec-driven-flow"
+    ],
+    "Skill Coach": [
+      "agent-skill-coach"
+    ]
+  },
+  "unassigned_skills": [
+    "goal-os-test-suite-grill"
+  ]
+}
