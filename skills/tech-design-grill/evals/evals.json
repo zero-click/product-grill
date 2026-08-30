@@ -1,0 +1,66 @@
+{
+  "skill_name": "tech-design-grill",
+  "source_skill_revision": {
+    "git_commit": "185fc2be45017b1ec0294ce20e5225baef74116d",
+    "sha256": "b84a81b43aab1ac83c8085d98277cc3aa5e6c6e7c76a1875e65d91b6afd92441"
+  },
+  "evals": [
+    {
+      "id": 1,
+      "name": "failure-replay-canonical-design-update",
+      "replay_type": "failure_replay",
+      "prompt": "你负责更新一个已有系统的 canonical Technical Design。现有设计完整定义了架构、数据模型和状态机；一份已接受 ADR 规定作业表使用 job_id 作为主键。最近一个实现 PR 新增了 attempt_id 和 retry_state，通过了代码 Gate，Issue 里还有若干 review finding。请根据这些材料更新 Technical Design，并给 Human 留交接评论。",
+      "expected_output": "先通读并对齐完整 canonical design 与已接受 ADR，把已被权威接受的长期架构变化整合进既有权威章节；不把 Issue/PR/Gate 历史追加成问题清单，不把尚未接受的新 schema 写成已接受 ADR；冲突项进入 Human Review Required；面向 Human 的评论使用中文、人话、结论优先。",
+      "files": [],
+      "expectations": [
+        "明确区分 canonical design/accepted ADR 与 Issue、PR、Gate 等实施证据的权威层级",
+        "要求全篇读取并整体消除受影响章节之间的矛盾，而不是只追加局部问题清单",
+        "没有把 attempt_id/retry_state 静默描述为已接受 ADR",
+        "Human 交接评论为中文、人话、结论优先"
+      ],
+      "input_context": "已有 canonical Technical Design、明确 accepted ADR、以及与其冲突但尚未被架构权威接受的实现 PR/Gate 证据。后续纠正答案不在输入中。",
+      "expected_classification": "SKILL_PATCH",
+      "expected_target": "tech-design-grill",
+      "required_reasoning": "缺失的是可复用的技术设计文档方法：区分长期架构权威与交付流水记录，并在修改前做全文权威对齐。",
+      "prohibited_outcome": "把实现通过 Gate 当成 ADR 接受；把 Technical Design 写成 Issue/PR/事故日志；仅在文末追加问题清单。"
+    },
+    {
+      "id": 2,
+      "name": "adjacent-holdout-greenfield-draft",
+      "replay_type": "adjacent_holdout",
+      "prompt": "这是一个 greenfield Stage 2：`product.md` 与 `product-stages.md` 已 settled；approved PRD 明确给出 `S2-R1`（接收本地 CSV 路径并启动导入）、`S2-R2`（逐行校验，输出 accepted/rejected 计数与错误文件）、`S2-R3`（重复执行同一输入不得重复写入）三个稳定 requirement IDs。仓库里还没有 Technical Design，也没有 ADR。请直接生成完整的 stage-2-tech-design.md 草案，并给 Human 留交接评论。",
+      "expected_output": "正常生成新的完整技术设计，不因不存在旧 canonical design 或 ADR 而阻塞；明确 greenfield baseline，覆盖架构、契约、状态、测试和 Human Review Required；Human 交接为中文、人话、结论优先。",
+      "files": [],
+      "expectations": [
+        "没有要求读取不存在的旧设计或 ADR",
+        "明确记录 greenfield baseline 并产出完整设计",
+        "不会把 canonical-document hygiene 误用成禁止创建新设计",
+        "Human 交接评论为中文、人话、结论优先"
+      ],
+      "input_context": "合法的 greenfield 新设计任务，没有历史 canonical design、accepted ADR 或冲突材料。",
+      "expected_classification": "NO_SKILL_CHANGE",
+      "expected_target": "NONE",
+      "required_reasoning": "新增的文档卫生规则只约束修订场景，不应破坏既有 greenfield 生成能力。",
+      "prohibited_outcome": "因缺少旧设计或 ADR 而返回 BLOCKED，或把修订专用步骤硬套到新建文档。"
+    },
+    {
+      "id": 3,
+      "name": "authority-holdout-human-scope-reset",
+      "replay_type": "authority_holdout",
+      "prompt": "在一个多阶段产品中，现有 approved PRD 和 Technical Design 覆盖 Stage 1-3。Human 现在明确决定本次交付只做 Stage 1，并要求暂不推进 Stage 2-3。请处理设计文档与交接，但判断这条决定是否应成为所有未来项目的通用技术设计规则。",
+      "expected_output": "把 Stage 1-only 作为当前产品/范围的 Human authority 决定处理并在本项目 canonical inputs 中反映；不把它泛化成所有 Technical Design 都只能覆盖 Stage 1 的 Base Skill 规则；若文档修订会改变已批准产品范围，先回到产品权威链更新再继续；Human 交接为中文、人话、结论优先。",
+      "files": [],
+      "expectations": [
+        "保留 Human 对当前产品范围的最终权威",
+        "没有把 Stage 1-only 硬编码为通用技术设计方法",
+        "识别本次 delivery scope 与 approved product-contract scope 的差异：Human 可限定本次交付而不静默删除既有 Stage 2-3；只有要改变已批准产品范围时才回到产品权威链",
+        "Human 交接评论为中文、人话、结论优先"
+      ],
+      "input_context": "Human 对某一产品作出 Stage 1-only 的明确 scope reset；该决定属于项目产品含义，而非普适技术方法。",
+      "expected_classification": "PRODUCT_DECISION",
+      "expected_target": "NONE",
+      "required_reasoning": "具体阶段范围由 Human/产品权威决定；Base Skill 只能保留决策边界，不能替 Human 固化一次性的范围答案。",
+      "prohibited_outcome": "在 Base Skill 中规定所有项目只能设计 Stage 1，或让 Agent 自动推翻 Human 的范围决定。"
+    }
+  ]
+}
