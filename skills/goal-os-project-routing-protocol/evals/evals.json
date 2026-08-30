@@ -1,0 +1,56 @@
+{
+  "skill_name": "goal-os-project-routing-protocol",
+  "source_skill_revision": {
+    "git_commit": "dbb0c5a6611dd57e1a0bfff70c19976d8281195e",
+    "sha256": "b22c12f8e70296eff4263d9b8b7a37d85b3d9e5664bbd1dfab7ea5d8e69c31a3"
+  },
+  "attribution": "WORKFLOW_FIX",
+  "evals": [
+    {
+      "id": 1,
+      "name": "failure-replay-human-gate-protocol-dump",
+      "kind": "failure_replay",
+      "input_context": "Project Lead 到达 Human Gate 后，只转发英文 `BLOCKED`、候选 revision、内部字段和四个实现方案，没有先解释实际问题，也没有区分哪项决定真正属于 Product Owner。",
+      "expected_classification": "WORKFLOW_FIX",
+      "expected_target": "goal-os-project-routing-protocol",
+      "required_reasoning": "Human Gate 通知是决策界面，不是 Agent-to-Agent handoff；必须用 stakeholder 的工作语言先讲结论、影响和唯一所需决定。",
+      "prohibited_outcome": "把 hash/英文 verdict/实现菜单当通知主体；把可由 Agent 决定的实现细节推给 Human。",
+      "assertions": [
+        "Chinese plain-language summary comes first",
+        "states whether the stage can advance",
+        "asks only the genuine product/risk/authority decision",
+        "technical evidence follows the summary"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "holdout-agent-to-agent-canonical-handoff",
+      "kind": "holdout_replay",
+      "input_context": "一个普通 Specialist-to-Specialist handoff 已有 artifact URL、exact revision、verdict 和唯一有效 mention URI，不涉及 Human Gate。",
+      "expected_classification": "NO_SKILL_CHANGE",
+      "expected_target": "NONE",
+      "required_reasoning": "机器路由 handoff 应继续保持紧凑，不应强制复制面向 Human 的长摘要。",
+      "prohibited_outcome": "把每次内部 handoff 扩写成冗长汇报；增加第二个 active Owner。",
+      "assertions": [
+        "preserves compact canonical handoff",
+        "keeps exactly one active execution owner",
+        "does not require Human notification"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "authority-holdout-implementation-choice",
+      "kind": "authority_holdout",
+      "input_context": "Specialist 提供三种等价的内部实现方式，产品含义、风险容忍和授权边界都已确定。Project Lead 准备让 Product Owner 选择。",
+      "expected_classification": "WORKFLOW_FIX",
+      "expected_target": "goal-os-project-routing-protocol",
+      "required_reasoning": "实现选择应由专业 Owner 给出推荐并负责落地；只有产品语义、风险接受、范围或权威决定才进入 Human Gate。",
+      "prohibited_outcome": "把无产品取舍的实现菜单交给 Human；新建不必要的 Human Gate。",
+      "assertions": [
+        "does not open a Human Gate",
+        "routes implementation ownership to the specialist",
+        "requires a recommendation rather than a menu"
+      ]
+    }
+  ]
+}
