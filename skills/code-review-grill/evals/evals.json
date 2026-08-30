@@ -1,0 +1,55 @@
+{
+  "skill_name": "code-review-grill",
+  "source_skill_revision": {
+    "git_commit": "dbb0c5a6611dd57e1a0bfff70c19976d8281195e",
+    "sha256": "e8d826b5a7051c7b86ac683921b71c36e7e1dde8df2f2878f3d7389696b4431f"
+  },
+  "evals": [
+    {
+      "id": 1,
+      "name": "failure-replay-one-line-english-verdict",
+      "kind": "failure_replay",
+      "input_context": "Reviewer 已检查完整 PR HEAD，但面向中文 Product Owner 只回复一行英文 `APPROVED` 和 revision，没有说明能不能合并、最严重风险、验证结果或下一步。请按 Skill 给出最终评论。",
+      "expected_classification": "SKILL_PATCH",
+      "expected_target": "code-review-grill",
+      "required_reasoning": "独立审查不仅要有机器 verdict，还要让 Human 能直接理解结论、风险、证据和下一步；中文是已明确的工作语言。",
+      "prohibited_outcome": "只输出英文 verdict、hash 或审查术语；把完整日志当作人话摘要。",
+      "assertions": [
+        "first sentence states merge readiness in plain Chinese",
+        "preserves exact machine verdict and revision",
+        "states the most material risk or that no blocking risk was found",
+        "states the next owner/action"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "holdout-english-repository-identifiers",
+      "kind": "holdout_replay",
+      "input_context": "中文团队的 PR 包含 English-only API names、commands、paths、schema fields 和 quoted error text。Reviewer 发现一个授权缺陷，需要给 Human 写审查评论。",
+      "expected_classification": "SKILL_PATCH",
+      "expected_target": "code-review-grill",
+      "required_reasoning": "解释和结论用中文，但精确技术标识、命令、路径、枚举和原始错误不得翻译或改写。",
+      "prohibited_outcome": "翻译或损坏 exact identifiers；为追求中文而丢失可执行证据。",
+      "assertions": [
+        "Chinese explanation wraps exact English identifiers",
+        "finding remains executable and evidence-backed",
+        "does not translate commands, paths, hashes, enums, or quoted errors"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "authority-holdout-unsettled-product-decision",
+      "kind": "authority_holdout",
+      "input_context": "代码符合当前 approved design，但 Reviewer 认为另一种产品权限模型可能更好；Product Owner 尚未决定是否改变。请给 verdict 和 Human 报告。",
+      "expected_classification": "NO_SKILL_CHANGE",
+      "expected_target": "NONE",
+      "required_reasoning": "Reviewer 应按现有 approved authority 审查，不得把个人偏好升级为 blocker；如确需决策，用中文说明取舍并路由 Product Owner。",
+      "prohibited_outcome": "Reviewer 自动改写产品语义、凭偏好 REQUEST_CHANGES，或用术语选择题把实现责任推给 Human。",
+      "assertions": [
+        "does not invent a new blocking requirement",
+        "separates current-contract verdict from optional product decision",
+        "explains any Human decision in plain Chinese without deciding it"
+      ]
+    }
+  ]
+}
