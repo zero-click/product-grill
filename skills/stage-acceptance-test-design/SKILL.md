@@ -76,12 +76,14 @@ Keep acceptance ownership independent from implementation:
 | Role | Owns | Must Not Do |
 |---|---|---|
 | Acceptance Owner | Test contract, executable acceptance tests, fixtures, independent execution, acceptance verdict | Modify production code to make tests pass; approve their own interpretation of unclear requirements |
-| Approver | Requirement meaning, coverage approval, accepted-test changes | Delegate acceptance meaning to the implementer |
+| Approver / Human Gate | Requirement meaning, product-risk decisions, coverage approval, accepted-test changes | Delegate acceptance meaning to the implementer or ask the test gate to authenticate the approver |
 | Implementer | Production code and developer-owned unit/integration tests | Weaken, delete, skip, special-case, or silently modify approved acceptance tests |
 | Test Contract Reviewer | Independent coverage, claim-to-implementation alignment, whole-contract consistency, and material probes | Rewrite the acceptance contract or treat the author's claims as proof |
 | Code Reviewer | Implementation quality and checks for test bypass or tampering | Treat acceptance pass as a substitute for code review |
 
 The implementer may read and run acceptance tests. If a test is wrong or impossible, they submit a test change request. The acceptance owner evaluates it, and the approver accepts or rejects any substantive change before the approved suite changes.
+
+Approval authority remains in the project's designated Human Gate and governance record. The test gate proves that the Project Lead-fixed test revision/hash ran truthfully and completely; it does not authenticate the Human, invent a parallel approval source, or require PKI, signatures, external lookups, or a ledger unless an approved requirement already mandates one.
 
 ## Process
 
@@ -230,6 +232,18 @@ Rules:
 - avoid network dependence unless approved requirements make a live external source part of acceptance;
 - when live dependencies are required, distinguish dependency failure (`BLOCKED`) from implementation failure (`REQUEST_CHANGES`).
 
+Treat the **gate runner itself as a hostile boundary**. A caller can influence more than the documented command, so inventory and control every applicable execution surface: `argv`, environment variables, working-directory and user/global config, manifest or trust-source files, framework/project files, auto-loaded plugins and hooks, import/search paths, caches, and collection/selection filters. Do not accept a caller-authored manifest, runtime field, test count, or summary as proof of what ran.
+
+The controlled runner must:
+
+1. resolve the Project Lead-fixed test revision/hash from the authoritative repository source and verify the executed files against it;
+2. construct its own command and minimal allowlisted environment, disable unapproved config/plugin autoloading, and reject caller-controlled selection or pass criteria;
+3. run runtime probes separately from the test harness, recording actual executable/tool versions and capabilities rather than trusting `required_runtime` metadata or hard-coded values;
+4. prove mandatory **test bodies** executed, not merely that discovery succeeded or a process returned zero—for example with runner-owned per-test start/finish events tied to collected node IDs and a fresh run nonce, reconciled against the fixed mandatory set;
+5. fail closed on missing, duplicated, deselected, skipped, xfailed, interrupted, or body-not-finished mandatory tests, while preserving raw evidence for review.
+
+Use controls proportional to the actual boundary. A normal local acceptance suite does not need a new trust service, signing system, or ledger merely because its runner must sanitize inputs and prove body execution.
+
 Each test entry must name:
 
 - test ID and requirement IDs;
@@ -245,10 +259,12 @@ Each test entry must name:
 
 Before approval and before production implementation:
 
-1. Run the suite against the current baseline, an intentionally incomplete seam, or controlled mutants.
-2. Exercise the named cheating implementations through dependency injection, test doubles, fixture variants, or temporary mutations without committing them to production.
-3. Record which test rejects each mutant and why.
-4. Restore the baseline and verify the working tree.
+1. Name the exact seam and expected failure reason for each RED probe before running it.
+2. Run the suite against the current baseline, an intentionally incomplete seam, or one controlled mutant at a time.
+3. Exercise named cheating implementations through dependency injection, test doubles, fixture variants, or temporary mutations without committing them to production.
+4. Confirm each RED reaches its declared seam. Collection, import, dependency, permission, or unrelated setup failures do not prove the intended oracle, and combined mutants must not mask which control discriminated the bad behavior.
+5. Record which test rejects each mutant, the observed failure reason, and whether it matched the declared seam.
+6. Restore the baseline and verify the working tree.
 
 At least the critical negative controls must produce the expected failures. A suite that only demonstrates green results has not established that its assertions discriminate correct from fake behavior.
 
@@ -261,6 +277,8 @@ Do not require all tests to be red when the repository already contains valid be
 Before stakeholder approval, an independent Test Contract Reviewer reviews the exact candidate revision without rewriting it. The reviewer derives approved obligations independently, checks Design-to-Claim coverage, traces every material Claim through executable tests and actual production boundaries, checks whole-contract consistency, and uses narrow reviewer probes where trust, permission, provenance, fabricated completion, or high-impact bypass claims need corroboration.
 
 The reviewer returns `APPROVED`, `REQUEST_CHANGES`, or `BLOCKED`. Reviewer `APPROVED` means only that the exact Test Contract revision may enter the stakeholder/human approval gate.
+
+The reviewer may report evidence and a recommendation, but cannot settle an unapproved product risk or create a new approval mechanism. Route unresolved product meaning to the designated Approver/Human Gate and keep the affected acceptance decision `BLOCKED` until that authority records a decision.
 
 The approver then reviews the contract, reviewer evidence, and executable-test mapping before implementation begins. Approval requires:
 
@@ -293,8 +311,8 @@ The independent run must:
 
 1. start from a clean checkout/workspace;
 2. verify the approved contract revision/hash;
-3. run the full documented acceptance command;
-4. check collection counts and confirm no mandatory test was skipped, deselected, quarantined, or converted to expected failure;
+3. run the full documented acceptance command through the controlled runner, with caller-controlled execution surfaces removed or explicitly allowlisted;
+4. reconcile the fixed mandatory set with runner-owned body start/finish evidence and confirm no mandatory test was missing, duplicated, skipped, deselected, quarantined, converted to expected failure, or merely collected without executing its body;
 5. inspect required final artifacts/evidence;
 6. confirm provenance belongs to this run and prohibited side effects did not occur;
 7. execute the approved causal deletion/mutation/bypass controls where causal contribution is material;
@@ -406,6 +424,8 @@ Write an acceptance-test contract with this structure, adapting file names to th
 
 Also create or specify the runnable acceptance tests and the exact non-interactive command to execute them.
 
+For the Human handoff, write Chinese in plain language and lead with the conclusion. State: the fixed revision/hash, what test bodies actually ran, the runtime probe result, which RED controls hit their declared seams, evidence locations, and any blocker. Give the Human the product decision and impact that genuinely needs approval, with one evidence-backed recommendation; do not push test-runner, lookup, signing, PKI, or ledger implementation choices to the Human. Make explicit that the existing Human Gate is the approval authority and the test gate only proves truthful execution of the fixed tests.
+
 ## Completion Gate
 
 This skill is complete only when:
@@ -414,8 +434,9 @@ This skill is complete only when:
 - every in-scope requirement is covered or explicitly dispositioned;
 - each mandatory test maps to a requirement and exact command;
 - the QA Claim Ledger maps every material claim to approved authority, executable tests, production boundary, positive/negative behavior, command, and evidence;
-- critical negative controls are proven to fail against controlled bad behavior;
-- test collection and skip/deselection policies are enforced;
+- each critical negative control is proven to fail at its declared seam, without setup errors or combined mutants masking the result;
+- the controlled runner verifies the fixed revision/hash, separately probes the real runtime, and reconciles the mandatory set with test-body execution evidence rather than collection or exit code alone;
+- caller-controlled arguments, environment, config, files, plugins, and selection cannot alter the mandatory execution or pass rule;
 - the exact candidate revision and all review inputs are ready for independent Test Contract Review;
 - Interactive Mode: unresolved requirement or risk decisions are either settled by the approver or listed in `Human Review Required`;
 - Headless Mode: all decisions requiring confirmation are listed in `Human Review Required`;
@@ -440,3 +461,5 @@ If any condition is missing, report `BLOCKED` with the exact missing decision, s
 10. Acceptance pass replacing code review - approved behavior and implementation quality remain separate gates.
 11. Evidence-shape acceptance - a file, status, invocation record, or signed claim is not proof unless its content and causal provenance are independently checked.
 12. Retrofitting after a false PASS - when a cheating implementation passes, reopen and correct the acceptance contract first; do not keep the old PASS while treating the missing oracle as optional future coverage.
+13. Trusting the gate caller - caller-controlled arguments, environment, config, files, plugins, or selection can fabricate green without executing mandatory test bodies.
+14. Expanding QA authority - truthful test execution does not authenticate the approver or decide unresolved product risk; preserve the designated Human Gate.

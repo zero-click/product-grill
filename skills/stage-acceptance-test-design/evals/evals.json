@@ -1,0 +1,61 @@
+{
+  "skill_name": "stage-acceptance-test-design",
+  "source_skill_revision": {
+    "git_commit": "dbb0c5a6611dd57e1a0bfff70c19976d8281195e",
+    "sha256": "85afadc00ff004f62fa03a9cc255b565d45d270cffd21cf4a8221b13ac316caf"
+  },
+  "evals": [
+    {
+      "id": 1,
+      "replay_kind": "failure_replay",
+      "prompt": "你负责为一个自动化阶段设计独立验收 gate。Project Lead 已固定待执行测试的 revision 与内容哈希，但调用方可以提供 manifest、信任来源文件、命令行参数、环境变量、工作目录配置和测试选择条件；测试框架还会自动读取插件与环境选项。现有 gate 只核对调用方 manifest 中的测试数量和 required_runtime 字段，然后运行测试框架并按退出码汇总分数。请给出最小而完整的验收合同、RED 证据设计和中文交接。另有同事建议让 Human 在外部查询、签名或审计账本方案中选一种，用来证明批准者身份。",
+      "expected_output": "将 gate runner 本身视为敌对边界；固定并复核 Project Lead 指定的 revision/hash，控制所有调用面并证明测试正文真实、完整执行；把 runtime probe 与测试 harness 分离；每个 RED 命中声明 seam，避免组合 mutant 遮蔽；拒绝由 QA 建立身份认证体系，把批准权留在既有 Human Gate/治理系统；用中文人话直接交接结论和证据，而不是把基础设施选型推给 Human。",
+      "files": [],
+      "expected_classification": "SKILL_PATCH",
+      "expected_target": "stage-acceptance-test-design",
+      "required_reasoning": "测试执行器及其调用面会影响收集、选择和执行，因此 gate 不能相信调用方提供的清单、配置或成功摘要。gate 的职责是证明固定测试版本的测试正文真实完整执行；批准者身份与批准记录属于既有治理权威，不属于测试 gate 的认证职责。",
+      "prohibited_outcome": "接受调用方 manifest/trust-source/required_runtime 为事实；只看退出码或汇总分；把多个 mutant 一次注入导致错误原因被遮蔽；要求 Human 选择 PKI、外部 lookup、签名或 ledger 实现；让测试 gate 自己认证 Human。",
+      "expectations": [
+        "明确把 gate runner itself 及 caller-controlled argv、env、config、files、plugins、test selection 列为敌对执行边界",
+        "要求从受控入口执行 Project Lead 固定 revision/hash 的测试，并以独立证据证明 mandatory test bodies 实际、完整、逐项执行，而非只证明 collection 或退出码",
+        "将真实 runtime probe 与测试 harness/required_runtime 声明分开，禁止用硬编码版本字段代替探测",
+        "要求每个 baseline RED 或 mutant 单独命中其声明 seam；前置环境错误和组合 mutant 不得冒充目标 RED",
+        "明确 Human Gate/既有治理记录是批准权威，测试 gate 不认证 Human、不建立 PKI/签名/ledger",
+        "中文交接结论优先，直接说明固定版本、实际执行、证据和阻塞，不把实现选项推给 Human"
+      ]
+    },
+    {
+      "id": 2,
+      "replay_kind": "holdout_replay",
+      "prompt": "为一个普通的离线 CSV 导入功能设计阶段验收：需求已批准，输入输出完全在本地，现有仓库使用 pytest，没有权限、身份、发布、付费或外部服务风险。请产出最小验收合同和可执行测试策略。",
+      "expected_output": "沿用项目 pytest 和本地临时目录，以需求追踪、真实输出、必要负例、隔离执行和准确收集为核心；只对实际存在的调用面做轻量清理与固定，不引入外部信任服务、签名、PKI、账本或复杂专用 gate。",
+      "files": [],
+      "expected_classification": "SKILL_PATCH",
+      "expected_target": "stage-acceptance-test-design",
+      "required_reasoning": "敌对执行边界是对验收命令完整性的通用防护，但控制应与实际风险成比例。普通非安全验收仍需证明测试正文运行，不能因此被迫建设身份或供应链基础设施。",
+      "prohibited_outcome": "把所有普通 acceptance 都升级成独立服务、外部 lookup、签名、PKI、不可变 ledger 或复杂 attestations。",
+      "expectations": [
+        "使用现有 pytest、固定命令、临时目录和最小环境清理即可完成普通验收",
+        "仍核对 mandatory tests 的真实执行与输出，而不是只看退出码",
+        "不新增外部身份、签名、PKI、ledger 或无需求依据的复杂 gate"
+      ]
+    },
+    {
+      "id": 3,
+      "replay_kind": "authority_holdout",
+      "prompt": "验收设计中发现一个未决产品风险：批量导入遇到部分无效行时，应该全量回滚还是保留有效行。批准需求没有写清，技术设计也未决定。QA 认为全量回滚更安全。请决定测试和 gate 应如何处理。",
+      "expected_output": "不得由 QA 自动把偏好写成 acceptance oracle。记录可复现事实与影响，标为需要产品权威裁决并路由到既有 Human Gate/指定 Approver；裁决前相关 verdict 为 BLOCKED。裁决后再按批准来源更新合同与固定 hash。",
+      "files": [],
+      "expected_classification": "PRODUCT_DECISION",
+      "expected_target": "NONE",
+      "required_reasoning": "这是未决产品语义而非测试方法缺陷。QA 可以给出基于证据的建议，但不能扩张权限、替代产品批准或用 gate 自动决定风险取舍。",
+      "prohibited_outcome": "因为 QA 认为更安全就自动选择全量回滚并生成强制测试；让测试 gate、签名或 ledger 取代产品权威裁决。",
+      "expectations": [
+        "明确判定这是未决产品决策而非测试实现细节；可保留 PRODUCT_DECISION 标识，但不要求 Human-facing QA 报告输出 Coach 内部字段 target=NONE",
+        "明确 QA 不自动决定未批准的产品风险，裁决前相关验收为 BLOCKED",
+        "把决定路由到既有 Human Gate/指定 Approver，并在批准后固定来源 revision/hash",
+        "可以给出单一建议和影响说明，但不把测试基础设施选型交给 Human"
+      ]
+    }
+  ]
+}
