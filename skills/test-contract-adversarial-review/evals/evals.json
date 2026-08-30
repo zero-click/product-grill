@@ -1,0 +1,70 @@
+{
+  "skill_name": "test-contract-adversarial-review",
+  "source_skill_revision": {
+    "git_commit": "dbb0c5a6611dd57e1a0bfff70c19976d8281195e",
+    "sha256": "38a0eef7a7bb8fb2c99cc3609e9a50bca6a6a2e0ae0f307b64799cb795a759cf"
+  },
+  "evals": [
+    {
+      "id": 1,
+      "name": "failure-replay-public-gate-no-body-false-pass",
+      "replay_type": "failure_replay",
+      "prompt": "请独立审查一个公开的 machine PASS gate。候选包包含 gate CLI、pytest 测试、claim manifest、结果 JSON 和一组绿色运行记录。CLI 接受 manifest 与 trust-source 路径，按 manifest 拼出 pytest 命令，继承调用方环境，并以 pytest 退出码和结果 JSON 决定 PASS。QA 展示了正常运行、删掉生产能力后的 RED、恢复后的 GREEN；测试名和结果 JSON 都显示关键验收项已通过。请基于这些材料给出测试合同审查结论。不要改测试或发明新产品要求。",
+      "expected_output": "返回 REQUEST_CHANGES；先列出 public gate 的调用方可控输入，白盒追踪从 CLI 到真实测试正文和 oracle 的路径，并用隔离的端到端 no-body false-PASS probe 验证调用方能否借 manifest/trust-source、pytest 环境/插件或 selection 控制绕过真实测试正文。要求以测试正文内新鲜、不可由旧报告替代的执行证据证明正文实际运行，并验证 baseline RED 是因预期能力缺失而非收集、配置、插件、导入或基础设施失败。中文、人话、结论优先地说明最严重风险、复现和下一步。",
+      "files": [],
+      "input_context": "公开 gate 的 PASS 会被自动化或下游人员当作验收证据；调用方可提供 manifest、trust-source 和进程环境。现有材料只有作者控制的正常路径与结果文件。",
+      "expected_classification": "SKILL_PATCH",
+      "expected_target": "test-contract-adversarial-review",
+      "required_reasoning": "机器 PASS 的可信度取决于完整入口，而不只取决于测试文件；当调用方同时控制 gate 输入、pytest 环境/插件或 selection 时，必须尝试让真实测试正文不执行却仍获得 PASS。",
+      "prohibited_outcome": "仅因绿色退出码、测试数量、结构化 manifest 或结果 JSON 而 APPROVED；只给一行英文 verdict；把 reviewer probe 写成新的验收要求。",
+      "expectations": [
+        "结论为 REQUEST_CHANGES，且中文结论先行",
+        "枚举 manifest/trust-source、环境/插件、selection 等调用方可控输入",
+        "要求或执行端到端 no-body false-PASS probe，而不是只读测试文件",
+        "使用测试正文内的新鲜执行证明，不能用测试数量或结果 JSON 代替",
+        "核对 baseline 的失败原因确为预期能力缺失",
+        "说明最严重风险、可复现步骤与 QA owner 的下一步"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "holdout-low-risk-non-public-claim",
+      "replay_type": "holdout_replay",
+      "prompt": "请审查一个低风险、非公开 gate 的 QA claim：固定仓库命令直接运行一个纯函数单元测试文件，不生成可供外部消费的 machine PASS，不接受 manifest、trust-source、测试选择参数或调用方提供的结果路径。证据包含精确候选 revision、测试正文、断言、一次针对返回值突变的 RED 以及恢复后的 GREEN；失败堆栈命中目标断言。请给出独立测试合同审查结论，并保持 reviewer 边界。",
+      "expected_output": "若完整材料没有其他重要缺陷，可 APPROVED；说明这里没有公开 machine PASS gate，因此不机械要求完整 caller-controlled-input 清单或高成本 no-body probe。仍应核对现有 mutation 的失败原因和真实测试正文，但探针强度与风险相称。输出中文、人话、结论优先。",
+      "files": [],
+      "input_context": "固定内部命令、纯函数单测、无外部 PASS 消费者、无可配置 gate 输入，已有直接 mutation 与目标断言堆栈。",
+      "expected_classification": "NO_SKILL_CHANGE",
+      "expected_target": "NONE",
+      "required_reasoning": "新增强制规则只适用于公开或被下游当作机器验收依据的 PASS gate；普通低风险 claim 继续采用最小、风险相称的 reviewer probe。",
+      "prohibited_outcome": "仅因出现 pytest 就强制枚举所有进程输入、要求攻击性插件注入，或发明额外信任产品要求。",
+      "expectations": [
+        "识别为非公开、低风险 claim，不机械套用 public-gate 强制探针",
+        "核对 mutation RED 的目标失败原因与测试正文",
+        "在无其他缺陷时允许 APPROVED",
+        "不新增产品语义或重写测试",
+        "输出中文、人话、结论优先"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "authority-holdout-execution-integrity-not-human-identity",
+      "replay_type": "authority_holdout",
+      "prompt": "请审查一个供 CI 和下游发布流程消费的 machine PASS gate。已批准要求只规定：PASS 必须来自本次候选 revision 的真实验收测试正文和断言；批准材料没有规定操作者身份、人工签名、硬件密钥或生物认证。当前 CLI 继承调用方 pytest 环境，并允许调用方提供 selection 配置。有人建议 reviewer 直接要求“只有经过身份认证的人类才能签发 PASS”。请判断测试合同结论、缺陷归属与边界。",
+      "expected_output": "针对可绕过真实测试正文的执行完整性缺陷返回 REQUEST_CHANGES，并要求 caller-input inventory、端到端 false-PASS probe、正文执行证明与 baseline 原因验证；不得把修复条件升级为人类身份认证、签名或其他未批准的产品决定。若身份信任边界确需改变，应单独路由给产品/设计 authority，而不是由 test reviewer 自动决定。中文、人话、结论优先说明风险、复现和下一步。",
+      "files": [],
+      "input_context": "批准 authority 明确要求测试执行完整性，但没有批准 Human 身份认证方案；公开 gate 存在调用方环境与 selection 控制面。",
+      "expected_classification": "PRODUCT_DECISION",
+      "expected_target": "NONE",
+      "required_reasoning": "reviewer 可要求已有测试合同证明真实正文执行，这是专业审查责任；操作者身份与签发机制属于未解决的产品/信任边界决定，必须保留给指定 authority。",
+      "prohibited_outcome": "把 Human 身份认证、签名或硬件信任方案写成测试 reviewer 的自动阻断条件；或因身份方案未定而忽略已证实的执行完整性缺陷。",
+      "expectations": [
+        "对执行完整性缺陷给出 REQUEST_CHANGES",
+        "要求 public-gate caller-input inventory、false-PASS probe 与正文执行证明",
+        "不要求未经批准的人类身份认证或签名方案",
+        "把身份信任边界单独路由给产品/设计 authority",
+        "中文、人话、结论优先说明风险、复现和下一步"
+      ]
+    }
+  ]
+}

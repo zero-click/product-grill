@@ -121,6 +121,20 @@ Review the Stage Test Suite, executable tests, fixtures, helpers, gate CLI, evid
 
 A point fix passing its named regression is insufficient if the complete contract becomes less trustworthy.
 
+#### Mandatory public-gate threat model
+
+When a gate emits machine `PASS` for CI, release automation, or downstream trust, review the public gate invocation as the security boundary, not only the named tests. This is mandatory even when the author supplies normal-path GREEN, mutation, and structured evidence.
+
+1. Inventory every caller-controlled input that can affect execution or reporting: CLI arguments; manifest, trust-source, config, and result paths; working directory; environment; interpreter and import path; plugin/autoload and hooks; test selection, filters, markers, deselection, skip, and collection controls; caches, prior artifacts, and output destinations.
+2. White-box trace the complete path from the published gate CLI through input parsing, process launch, test discovery and selection, test-body entry, assertion/oracle evaluation, result serialization, and final exit/status decision. Treat any untraced caller-controlled branch as unresolved.
+3. In an isolated copy, run an end-to-end **no-body false-PASS probe** through the exact public invocation: use the realistic caller controls above to try to prevent the required test body from running while still obtaining machine `PASS`. Prefer the smallest high-yield combinations; do not turn the review into an exhaustive platform penetration test.
+4. Require fresh proof produced from inside each mandatory test body and bound to this invocation. Exit code, collected/passed count, test name, manifest, status label, or result JSON alone does not prove the body and oracle executed.
+5. Validate baseline RED reasons: the expected baseline must fail because the approved capability is absent or wrong at the intended oracle, not because of collection, deselection, configuration, plugin behavior, import/setup failure, stale input, or unavailable infrastructure.
+
+Any reproducible no-body machine `PASS`, missing body-execution proof, or materially caller-controlled path that can bypass the oracle is an Important or Critical QA-owned finding. Require the gate to fail closed for the approved execution-integrity obligation. Do not infer a new Human identity, signing, or trust product requirement; route any such unsettled authority decision separately.
+
+For a fixed, non-public, low-risk claim with no externally consumed machine verdict or configurable gate surface, keep probes proportional. Do not mechanically require the full inventory or adversarial environment/plugin injection when direct trace and a targeted negative control already discriminate the claim.
+
 ### 5. Reviewer probes
 
 Run the smallest practical independent probe for material claims involving:
@@ -150,6 +164,10 @@ Every blocking finding includes:
 Minor findings may accompany approval when they do not weaken contract trustworthiness.
 
 ## Output
+
+Write in Chinese, plain language, and lead with the conclusion. Start with the exact verdict, then explain the single most severe risk, the shortest reproducible command or procedure with observed result, and the next action with owner. Do not return a one-line English verdict. Put matrices and detailed evidence after this executive summary.
+
+For any public machine-`PASS` gate, the executive summary and reviewer probes must explicitly report both: (1) the no-body false-PASS result, and (2) whether baseline RED failed at the intended approved-capability oracle rather than at collection, selection, configuration, plugin/import setup, stale input, or unavailable infrastructure. Missing either result keeps the claim `BLOCKED` or `REQUEST_CHANGES`; do not bury this check only in a matrix.
 
 Produce these four artifacts in the review report.
 
