@@ -120,10 +120,22 @@ Minor findings alone may accompany `APPROVED`. QA PASS never forces approval.
 
 ## Output Format
 
-```markdown
-# PR Review
+The human-facing review is part of the review contract, not optional presentation polish.
 
-## Review Context
+- Use the stakeholder's established working language; for a Chinese team, headings, conclusions, explanations, impact, and next actions are in Chinese.
+- Preserve exact commands, paths, hashes, schema fields, API/class/function names, enums, quoted errors, and machine verdicts such as `APPROVED`, `REQUEST_CHANGES`, and `BLOCKED`.
+- The first screen must answer in plain language: **能不能合并、最严重风险是什么、谁下一步做什么**. A one-line verdict, hash dump, matrix, or untranslated review transcript is invalid even when technically correct.
+- Explain each technical finding once in human terms, then attach the exact evidence locator. Put detailed matrices and long command output after the decision summary or in linked evidence.
+- Do not turn implementation details into a menu for the stakeholder. Recommend the professional correction; ask for a Human decision only when approved product meaning, risk tolerance, or authority is genuinely unsettled.
+
+```markdown
+结论：`APPROVED | REQUEST_CHANGES | BLOCKED`。<一句人话说明能否合并以及原因>
+最严重风险：<一个最重要的风险；无阻塞项时明确写“未发现阻塞风险”>
+下一步：<owner + required action；Human 无需行动时明确说明>
+
+# PR 审查
+
+## 审查上下文
 - PR: <URL>
 - Base: <revision>
 - Reviewed HEAD: <revision>
@@ -131,18 +143,18 @@ Minor findings alone may accompany `APPROVED`. QA PASS never forces approval.
 - QA Evidence HEAD: <revision>
 - Approved Test Contract: <revision/hash>
 
-## Strengths
+## 做得好的地方
 - <specific evidence-backed strength>
 
 ## Findings
 
 ### Critical
 1. **<title>**
-   - Evidence: `<file:line or artifact>`
-   - Contract: `<Requirement ID / design rule / risk boundary>`
-   - Failure and impact: <what fails and why it matters>
-   - Fix owner: <implementation | architecture | QA contract | product>
-   - Required change: <clear condition for resolution>
+   - 证据：`<file:line or artifact>`
+   - 违反合同：`<Requirement ID / design rule / risk boundary>`
+   - 实际失败与影响：<what fails and why it matters>
+   - 修复 Owner：<implementation | architecture | QA contract | product>
+   - 通过条件：<clear condition for resolution>
 
 ### Important
 <same structure or `None`>
@@ -150,7 +162,7 @@ Minor findings alone may accompany `APPROVED`. QA PASS never forces approval.
 ### Minor
 <same structure or `None`>
 
-## Contract and Test Integrity
+## 合同与测试完整性
 - Requirement alignment: PASS | FAIL | BLOCKED
 - Architecture alignment: PASS | FAIL | BLOCKED
 - Security and risk boundary: PASS | FAIL | BLOCKED
@@ -161,8 +173,8 @@ Minor findings alone may accompany `APPROVED`. QA PASS never forces approval.
 ## Verdict
 `APPROVED | REQUEST_CHANGES | BLOCKED`
 
-## Reasoning
-<concise evidence-based rationale>
+## 判断依据
+<concise evidence-based rationale in the stakeholder's working language>
 ```
 
 ## Anti-Patterns
@@ -173,4 +185,5 @@ Minor findings alone may accompany `APPROVED`. QA PASS never forces approval.
 - Rewriting code while acting as the independent reviewer.
 - Asking Tywin to alter QA-owned acceptance tests without a test-change decision.
 - Reporting vague findings without location, violated contract, impact, and fix owner.
+- Returning only an English verdict, revision, matrix, or raw transcript when the stakeholder's working language and decision needs are known.
 - Blocking on personal taste, speculative scale, or unapproved future requirements.
